@@ -154,6 +154,14 @@ Here are the available commands:
 /status - Get the current status of the bot
 /start_trading - Start the trading bot
 /stop_trading - Stop the trading bot
+/set_risk_level - Set the risk level (Example: /set_risk_level medium)
+/get_profit - Get the total profit
+/get_open_positions - Get the open positions
+/close_position - Close a specific position (Example: /close_position 1)
+/set_trade_amount - Set the trade amount (Example: /set_trade_amount 100)
+/get_market_conditions - Get the current market conditions
+/set_strategy - Set the trading strategy (Example: /set_strategy scalping)
+/get_strategy - Get the current trading strategy
     """
     context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
 
@@ -184,6 +192,16 @@ dp.add_handler(CommandHandler('help', help_command))
 dp.add_handler(CommandHandler('status', status_command))
 dp.add_handler(CommandHandler('start_trading', start_trading_command))
 dp.add_handler(CommandHandler('stop_trading', stop_trading_command))
+
+# Les nouvelles commandes
+dp.add_handler(CommandHandler('set_risk_level', set_risk_level_command, pass_args=True))
+dp.add_handler(CommandHandler('get_profit', get_profit_command))
+dp.add_handler(CommandHandler('get_open_positions', get_open_positions_command))
+dp.add_handler(CommandHandler('close_position', close_position_command, pass_args=True))
+dp.add_handler(CommandHandler('set_trade_amount', set_trade_amount_command, pass_args=True))
+dp.add_handler(CommandHandler('get_market_conditions', get_market_conditions_command))
+dp.add_handler(CommandHandler('set_strategy', set_strategy_command, pass_args=True))
+dp.add_handler(CommandHandler('get_strategy', get_strategy_command))
 
 def main():
     # Créez un thread pour l'interaction automatique avec ChatGPT
