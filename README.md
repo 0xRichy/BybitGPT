@@ -34,15 +34,15 @@ pip install -r requirements.txt
 
 4. Configurer les clés d'API et les paramètres du bot :
 
-   - Ouvrez le fichier `.env` dans un éditeur de texte.
-   - Remplacez les valeurs `your_api_key`, `your_secret_key`, `your_openai_api_key`, `your_bot_token`, et `your_chat_id` par vos propres clés et paramètres. Enregistrez le fichier.
+   - Ouvrez le fichier `BybitGPT.py` dans un éditeur de texte.
+   - Remplacez les valeurs `'your_api_key'`, `'your_secret_key'`, `'your_openai_api_key'`, `'your_bot_token'`, et `'your_chat_id'` par vos propres clés et paramètres. Enregistrez le fichier.
 
 ## Utilisation
 
 Pour lancer le bot BybitGPT, exécutez la commande suivante :
 
 ```
-python bot_trading.py
+python BybitGPT.py
 ```
 
 Le bot commencera à prendre des décisions de trading en fonction des réponses fournies par ChatGPT et effectuera des transactions automatiques en temps réel. Les notifications concernant les actions du bot seront envoyées sur le chat Telegram spécifié.
