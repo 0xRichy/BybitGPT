@@ -17,7 +17,7 @@ Le bot effectue automatiquement des transactions en fonction des réponses fourn
 1. Clonez ce référentiel sur votre machine locale ou sur votre VPS :
 
 ```
-git clone https://github.com/votre_utilisateur/BybitGPT.git
+git clone https://github.com/0xRichy/BybitGPT.git
 ```
 
 2. Accédez au répertoire du projet :
