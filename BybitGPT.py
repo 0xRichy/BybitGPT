@@ -27,7 +27,10 @@ def set_leverage(leverage: int):
     # La fonction set_leverage reste inchangée
 
 def get_balance():
-    # La fonction get_balance reste inchangée
+    # Insérez ici le code pour obtenir le solde
+    balance = ...
+    return balance
+
 
 def get_price():
     # La fonction get_price reste inchangée
