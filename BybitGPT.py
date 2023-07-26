@@ -350,7 +350,7 @@ def analyze_market_response(update, context):
             log_and_notify(message)
 
 
-# Fonction pour la commande /help
+# Function for the /help command
 def help_command(update, context):
     help_text = """
 Here are the available commands:
@@ -381,14 +381,15 @@ Here are the available commands:
     """
     context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
 
-# Fonction pour la commande /status
+
+# Function for the command /status
 def status_command(update, context):
     if trading_active:
         context.bot.send_message(chat_id=update.effective_chat.id, text="The bot is currently trading.")
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="The bot is currently not trading.")
 
-# Fonctions pour les commandes /start_trading et /stop_trading
+# Functions for the commands /start_trading and /stop_trading
 def start_trading_command(update, context):
     global trading_active
     trading_active = True
@@ -399,7 +400,7 @@ def stop_trading_command(update, context):
     trading_active = False
     context.bot.send_message(chat_id=update.effective_chat.id, text="Trading has been stopped.")
 
-# Ajoutez les gestionnaires de commandes à votre bot, y compris le nouveau /analyze_market
+# Add the command handlers to your bot, including the new /analyze_market
 dp.add_handler(CommandHandler('balance', get_balance_command))
 dp.add_handler(CommandHandler('trades', get_trades_command))
 dp.add_handler(CommandHandler('restart', restart_command))
