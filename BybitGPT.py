@@ -7,11 +7,14 @@ import telegram
 import threading
 from telegram.ext import CommandHandler, Updater
 
-# Vous devez créer vos propres clés API sur Bybit et les remplacer ici
-apiKey = 'YOUR_BYBIT_API_KEY'
-secret = 'YOUR_BYBIT_SECRET'
-
+# Set up the connection with OpenAI GPT-4
 openai.api_key = 'YOUR_OPENAI_API_KEY'
+
+# Replace the placeholders with your actual API keys and tokens
+
+# Set up the connection with Bybit
+apiKey = 'YOUR_BYBIT_API_KEY'
+secret = 'YOUR_BYBIT_API_SECRET'
 
 exchange = ccxt.bybit({
     'apiKey': apiKey,
@@ -25,14 +28,13 @@ exchange = ccxt.bybit({
 # Set up logging
 logging.basicConfig(filename='bot.log', level=logging.INFO)
 
-# Initialise la connexion avec Telegram
+# Initialize the connection with Telegram
 bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'
 bot = telegram.Bot(token=bot_token)
 
-# ID du chat sur lequel vous souhaitez recevoir les notifications
-chat_id = 'YOUR_TELEGRAM_CHAT_ID'
+# ID of the chat to receive notifications
+chat_id = 'YOUR_CHAT_ID'
 
-# Variable pour contrôler l'état du trading
 trading_active = True
 
 def log_and_notify(message):
@@ -142,6 +144,91 @@ def set_leverage_command(update, context):
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No leverage provided. Please provide a number after the command. Example: /set_leverage 10")
 
+# Function for setting the risk level command
+def set_risk_level_command(update, context):
+    if context.args:
+        try:
+            risk_level = context.args[0].lower()
+            # Implement the logic to set the risk level based on the input (e.g., 'low', 'medium', 'high')
+            # Your code here
+
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Risk level set to {risk_level}.")
+        except ValueError:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid risk level. Please provide 'low', 'medium', or 'high'.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No risk level provided. Please provide a risk level after the command. Example: /set_risk_level medium")
+
+# Function for getting profit command
+def get_profit_command(update, context):
+    # Implement the logic to calculate and fetch the total profit from your trading activities
+    # Your code here
+
+    total_profit = 1000  # Replace this with the actual calculated profit
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total profit: {total_profit} USDT")
+
+# Function for getting open positions command
+def get_open_positions_command(update, context):
+    # Implement the logic to fetch and display the open positions from your trading activities
+    # Your code here
+
+    open_positions = "You have 2 open positions."  # Replace this with the actual open positions information
+    context.bot.send_message(chat_id=update.effective_chat.id, text=open_positions)
+
+# Function for closing a specific position command
+def close_position_command(update, context):
+    if context.args:
+        try:
+            position_number = int(context.args[0])
+            # Implement the logic to close the specific position based on the position number
+            # Your code here
+
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Closed position {position_number}.")
+        except ValueError:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid position number. Please provide a valid number.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No position number provided. Please provide a position number after the command. Example: /close_position 1")
+
+# Function for setting the trade amount command
+def set_trade_amount_command(update, context):
+    if context.args:
+        try:
+            trade_amount = float(context.args[0])
+            # Implement the logic to set the trade amount based on the input
+            # Your code here
+
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Trade amount set to {trade_amount} BTC.")
+        except ValueError:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid trade amount. Please provide a valid number.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No trade amount provided. Please provide a trade amount after the command. Example: /set_trade_amount 100")
+
+# Function for getting market conditions command
+def get_market_conditions_command(update, context):
+    # Implement the logic to fetch and display the current market conditions
+    # Your code here
+
+    market_conditions = "The market conditions are favorable for buying BTC."  # Replace this with the actual market conditions information
+    context.bot.send_message(chat_id=update.effective_chat.id, text=market_conditions)
+
+# Function for setting the trading strategy command
+def set_strategy_command(update, context):
+    if context.args:
+        strategy = " ".join(context.args)
+        # Implement the logic to set the trading strategy based on the input
+        # Your code here
+
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Trading strategy set to: {strategy}.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No trading strategy provided. Please provide a strategy after the command. Example: /set_strategy scalping")
+
+# Function for getting the current trading strategy command
+def get_strategy_command(update, context):
+    # Implement the logic to fetch and display the current trading strategy
+    # Your code here
+
+    current_strategy = "The current trading strategy is scalping."  # Replace this with the actual trading strategy information
+    context.bot.send_message(chat_id=update.effective_chat.id, text=current_strategy)
+
 # Fonction pour la commande /help
 def help_command(update, context):
     help_text = """
@@ -193,7 +280,7 @@ dp.add_handler(CommandHandler('status', status_command))
 dp.add_handler(CommandHandler('start_trading', start_trading_command))
 dp.add_handler(CommandHandler('stop_trading', stop_trading_command))
 
-# Les nouvelles commandes
+# The new commands
 dp.add_handler(CommandHandler('set_risk_level', set_risk_level_command, pass_args=True))
 dp.add_handler(CommandHandler('get_profit', get_profit_command))
 dp.add_handler(CommandHandler('get_open_positions', get_open_positions_command))
@@ -204,16 +291,16 @@ dp.add_handler(CommandHandler('set_strategy', set_strategy_command, pass_args=Tr
 dp.add_handler(CommandHandler('get_strategy', get_strategy_command))
 
 def main():
-    # Créez un thread pour l'interaction automatique avec ChatGPT
+    # Create a thread for automatic interaction with GPT-4
     chat_thread = threading.Thread(target=automatic_chat_with_chatgpt)
 
-    # Créez un thread pour le bot Telegram
+    # Create a thread for the Telegram bot
     telegram_thread = threading.Thread(target=updater.start_polling)
 
-    # Démarrez les threads
+    # Start the threads
     chat_thread.start()
     telegram_thread.start()
 
-# Appelez la fonction main pour démarrer les threads
+# Call the main function to start the threads
 if __name__ == "__main__":
     main()
