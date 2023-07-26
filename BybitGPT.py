@@ -24,19 +24,24 @@ exchange = ccxt.bybit({
 logging.basicConfig(filename='bot.log', level=logging.INFO)
 
 def set_leverage(leverage: int):
-    # La fonction set_leverage reste inchangée
+    print(f"Setting leverage to {leverage}")
+    # Add your code to set leverage here
 
 def get_balance():
-    # Insérez ici le code pour obtenir le solde
-    balance = ...
+    print("Getting balance")
+    # Add your code to get balance here
+    balance = 0
     return balance
 
-
 def get_price():
-    # La fonction get_price reste inchangée
+    print("Getting price")
+    # Add your code to get price here
+    price = 0
+    return price
 
 def place_order(side, amount):
-    # La fonction place_order reste inchangée
+    print(f"Placing {side} order for {amount}")
+    # Add your code to place order here
 
 def get_openai_decision(prompt):
     response = openai.Completion.create(
