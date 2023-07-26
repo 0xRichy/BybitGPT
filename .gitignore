@@ -1,0 +1,12 @@
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Environnement virtuel
+venv/
+
+# Fichiers de données sensibles
+secrets.json
+
+# Fichiers de logs
+*.log
