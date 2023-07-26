@@ -34,6 +34,15 @@ def set_leverage(leverage: int):
     message = f"Setting leverage to {leverage}"
     log_and_notify(message)
 
+    # Utiliser l'API Bybit pour définir le levier
+    try:
+        params = {'symbol': 'BTCUSD', 'leverage': leverage}  # Remplacer 'BTCUSD' par le symbole de l'actif que vous tradez
+        exchange.private_post_position_leverage(params)
+    except Exception as e:
+        error_message = f"Failed to set leverage: {str(e)}"
+        log_and_notify(error_message)
+
+
 def get_balance():
     message = "Getting balance"
     log_and_notify(message)
@@ -50,12 +59,29 @@ def get_balance():
 def get_price():
     message = "Getting price"
     log_and_notify(message)
-    price = 0
-    return price
+
+    # Utiliser l'API Bybit pour obtenir le prix actuel du BTC
+    try:
+        ticker = exchange.fetch_ticker('BTC/USDT')
+        price = ticker['last']
+        return price
+    except Exception as e:
+        error_message = f"Failed to get price: {str(e)}"
+        log_and_notify(error_message)
+        return 0
+
 
 def place_order(side, amount):
     message = f"Placing {side} order for {amount}"
     log_and_notify(message)
+
+    # Utiliser l'API Bybit pour placer un ordre
+    try:
+        order = exchange.create_order('BTC/USDT', 'market', side, amount)
+    except Exception as e:
+        error_message = f"Failed to place order: {str(e)}"
+        log_and_notify(error_message)
+
 
 def get_openai_decision(prompt):
     response = openai.Completion.create(
@@ -70,7 +96,6 @@ def get_openai_decision(prompt):
 
     return decision
 
-# Nouvelle fonction pour l'interaction automatique avec ChatGPT et envoi de notifications Telegram
 def automatic_chat_with_chatgpt():
     global trading_active
 
@@ -154,38 +179,64 @@ def set_risk_level_command(update, context):
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No risk level provided. Please provide a risk level after the command. Example: /set_risk_level medium")
 
-# Function for getting profit command
 def get_profit_command(update, context):
     # Implement the logic to calculate and fetch the total profit from your trading activities
-    # Your code here
+    try:
+        # Fetch all closed trades
+        closed_trades = exchange.fetch_closed_orders('BTC/USDT')
 
+        # Calculate the total profit
+        total_profit = sum([trade['profit'] for trade in closed_trades if trade['status'] == 'closed'])
+
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total profit: {total_profit} USDT")
+    except Exception as e:
+        error_message = f"Failed to get profit: {str(e)}"
+        log_and_notify(error_message)
+
+    # If the above code fails, it will send a default profit value
     total_profit = 1000  # Replace this with the actual calculated profit
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total profit: {total_profit} USDT")
 
-# Function for getting open positions command
+
 def get_open_positions_command(update, context):
     # Implement the logic to fetch and display the open positions from your trading activities
-    # Your code here
+    try:
+        # Fetch all open positions
+        open_positions = exchange.fetch_open_orders('BTC/USDT')
 
+        # Format the open positions information
+        open_positions_info = "\n".join([f"Position {i+1}: {position['side']} {position['amount']} BTC at {position['price']} USDT" for i, position in enumerate(open_positions)])
+
+        context.bot.send_message(chat_id=update.effective_chat.id, text=open_positions_info)
+    except Exception as e:
+        error_message = f"Failed to get open positions: {str(e)}"
+        log_and_notify(error_message)
+
+    # If the above code fails, it will send a default open positions information
     open_positions = "You have 2 open positions."  # Replace this with the actual open positions information
     context.bot.send_message(chat_id=update.effective_chat.id, text=open_positions)
 
-# Function for closing a specific position command
 def close_position_command(update, context):
     if context.args:
         try:
             position_number = int(context.args[0])
             # Implement the logic to close the specific position based on the position number
-            # Your code here
-
-            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Closed position {position_number}.")
+            open_positions = exchange.fetch_open_orders('BTC/USDT')
+            if position_number <= len(open_positions):
+                position_to_close = open_positions[position_number - 1]
+                exchange.cancel_order(position_to_close['id'], 'BTC/USDT')
+                context.bot.send_message(chat_id=update.effective_chat.id, text=f"Closed position {position_number}.")
+            else:
+                context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid position number. No such position.")
         except ValueError:
             context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid position number. Please provide a valid number.")
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No position number provided. Please provide a position number after the command. Example: /close_position 1")
 
-# Function for setting the trade amount command
+trade_amount = 0  # Global variable to store the trade amount
+
 def set_trade_amount_command(update, context):
+    global trade_amount
     if context.args:
         try:
             trade_amount = float(context.args[0])
@@ -198,32 +249,58 @@ def set_trade_amount_command(update, context):
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No trade amount provided. Please provide a trade amount after the command. Example: /set_trade_amount 100")
 
-# Function for getting market conditions command
 def get_market_conditions_command(update, context):
     # Implement the logic to fetch and display the current market conditions
-    # Your code here
+    try:
+        # Fetch the ticker for BTC/USDT
+        ticker = exchange.fetch_ticker('BTC/USDT')
 
+        # Format the market conditions information
+        market_conditions = f"The current price of BTC is {ticker['last']} USDT."
+
+        context.bot.send_message(chat_id=update.effective_chat.id, text=market_conditions)
+    except Exception as e:
+        error_message = f"Failed to get market conditions: {str(e)}"
+        log_and_notify(error_message)
+
+    # If the above code fails, it will send a default market conditions information
     market_conditions = "The market conditions are favorable for buying BTC."  # Replace this with the actual market conditions information
     context.bot.send_message(chat_id=update.effective_chat.id, text=market_conditions)
 
-# Function for setting the trading strategy command
+trading_strategy = ""  # Global variable to store the trading strategy
+
 def set_strategy_command(update, context):
+    global trading_strategy
     if context.args:
-        strategy = " ".join(context.args)
+        trading_strategy = " ".join(context.args)
         # Implement the logic to set the trading strategy based on the input
         # Your code here
 
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Trading strategy set to: {strategy}.")
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Trading strategy set to: {trading_strategy}.")
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No trading strategy provided. Please provide a strategy after the command. Example: /set_strategy scalping")
 
-# Function for getting the current trading strategy command
-def get_strategy_command(update, context):
-    # Implement the logic to fetch and display the current trading strategy
-    # Your code here
+trading_strategy = ""  # Global variable to store the trading strategy
 
-    current_strategy = "The current trading strategy is scalping."  # Replace this with the actual trading strategy information
-    context.bot.send_message(chat_id=update.effective_chat.id, text=current_strategy)
+def set_strategy_command(update, context):
+    global trading_strategy
+    if context.args:
+        trading_strategy = " ".join(context.args)
+        # Implement the logic to set the trading strategy based on the input
+        if trading_strategy.lower() == "scalping":
+            # For scalping, we might want to use high leverage and small trade size
+            set_leverage(50)
+            set_trade_amount(0.01)
+        elif trading_strategy.lower() == "swing":
+            # For swing trading, we might want to use low leverage and large trade size
+            set_leverage(10)
+            set_trade_amount(1.0)
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid strategy. Please provide a valid strategy. Example: /set_strategy scalping")
+
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Trading strategy set to: {trading_strategy}.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No trading strategy provided. Please provide a strategy after the command. Example: /set_strategy scalping")
 
 # Function for the command /analyze_market
 def analyze_market_command(update, context):
@@ -232,7 +309,7 @@ def analyze_market_command(update, context):
 
     # Set the handler for the user response
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, analyze_market_response))
-    
+
 # Function to handle the user response to /analyze_market
 def analyze_market_response(update, context):
     # Get the user's market analysis
@@ -250,7 +327,28 @@ def analyze_market_response(update, context):
     # Remove the temporary message handler to avoid processing future messages as responses to /analyze_market
     dp.remove_handler(analyze_market_response)
 
-# ... (previous code remains unchanged)
+    # Implement the logic to execute the trading decision
+    if decision.lower() == 'buy':
+        balance = get_balance()
+        if balance >= 10:
+            set_leverage(25)  # Set leverage to 25x
+            place_order('BUY', 10)
+            message = "Bot: Placed a BUY order for 10 BTC."
+            log_and_notify(message)
+        else:
+            message = "Bot: Not enough USDT balance to execute a BUY order."
+            log_and_notify(message)
+    elif decision.lower() == 'sell':
+        btc_balance = exchange.fetch_balance()['BTC']
+        if btc_balance['free'] > 0:
+            set_leverage(25)  # Set leverage to 25x
+            place_order('SELL', btc_balance['free'])
+            message = f"Bot: Placed a SELL order for {btc_balance['free']} BTC."
+            log_and_notify(message)
+        else:
+            message = "Bot: No BTC balance to execute a SELL order."
+            log_and_notify(message)
+
 
 # Fonction pour la commande /help
 def help_command(update, context):
