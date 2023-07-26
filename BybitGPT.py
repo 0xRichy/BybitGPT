@@ -1,20 +1,17 @@
 import ccxt
 import openai
 import logging
-import requests
 import time
 import telegram
 import threading
-from telegram.ext import CommandHandler, Updater
-
-# Set up the connection with OpenAI GPT-4
-openai.api_key = 'YOUR_OPENAI_API_KEY'
+from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 
 # Replace the placeholders with your actual API keys and tokens
-
-# Set up the connection with Bybit
+openai.api_key = 'YOUR_OPENAI_API_KEY'
 apiKey = 'YOUR_BYBIT_API_KEY'
 secret = 'YOUR_BYBIT_API_SECRET'
+bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'
+chat_id = 'YOUR_CHAT_ID'
 
 exchange = ccxt.bybit({
     'apiKey': apiKey,
@@ -25,16 +22,8 @@ exchange = ccxt.bybit({
     }
 })
 
-# Set up logging
 logging.basicConfig(filename='bot.log', level=logging.INFO)
-
-# Initialize the connection with Telegram
-bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'
 bot = telegram.Bot(token=bot_token)
-
-# ID of the chat to receive notifications
-chat_id = 'YOUR_CHAT_ID'
-
 trading_active = True
 
 def log_and_notify(message):
@@ -48,8 +37,15 @@ def set_leverage(leverage: int):
 def get_balance():
     message = "Getting balance"
     log_and_notify(message)
-    balance = 0
-    return balance
+
+    # Utiliser l'API Bybit pour récupérer le solde du compte
+    try:
+        balance = exchange.fetch_balance()['total']['USDT']
+        return balance
+    except Exception as e:
+        error_message = f"Failed to get balance: {str(e)}"
+        log_and_notify(error_message)
+        return 0
 
 def get_price():
     message = "Getting price"
@@ -229,26 +225,61 @@ def get_strategy_command(update, context):
     current_strategy = "The current trading strategy is scalping."  # Replace this with the actual trading strategy information
     context.bot.send_message(chat_id=update.effective_chat.id, text=current_strategy)
 
+# Function for the command /analyze_market
+def analyze_market_command(update, context):
+    # Prompt the user to enter their market analysis
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Please enter your market analysis:")
+
+    # Set the handler for the user response
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, analyze_market_response))
+    
+# Function to handle the user response to /analyze_market
+def analyze_market_response(update, context):
+    # Get the user's market analysis
+    market_analysis = update.message.text.strip()
+    if not market_analysis:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No market analysis provided.")
+        return
+
+    # Get the trading decision from ChatGPT using the user's market analysis as the prompt
+    decision = get_openai_decision(market_analysis)
+
+    # Send the trading decision to the user
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"ChatGPT's decision: {decision}")
+
+    # Remove the temporary message handler to avoid processing future messages as responses to /analyze_market
+    dp.remove_handler(analyze_market_response)
+
+# ... (previous code remains unchanged)
+
 # Fonction pour la commande /help
 def help_command(update, context):
     help_text = """
 Here are the available commands:
 
+🏦 Account:
 /balance - Get your current balance
+
+📈 Trading:
 /trades - Get your current trades
-/restart - Restart the bot
-/set_leverage - Set the leverage (Example: /set_leverage 10)
-/status - Get the current status of the bot
 /start_trading - Start the trading bot
 /stop_trading - Stop the trading bot
+/set_leverage - Set the leverage (Example: /set_leverage 10)
 /set_risk_level - Set the risk level (Example: /set_risk_level medium)
+/set_trade_amount - Set the trade amount (Example: /set_trade_amount 100)
 /get_profit - Get the total profit
+
+🔍 Market:
 /get_open_positions - Get the open positions
 /close_position - Close a specific position (Example: /close_position 1)
-/set_trade_amount - Set the trade amount (Example: /set_trade_amount 100)
 /get_market_conditions - Get the current market conditions
+/analyze_market - Manually analyze the market and get a trading decision from ChatGPT
+
+⚙️ Settings:
+/restart - Restart the bot
 /set_strategy - Set the trading strategy (Example: /set_strategy scalping)
 /get_strategy - Get the current trading strategy
+/status - Get the current status of the bot
     """
     context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
 
@@ -270,7 +301,7 @@ def stop_trading_command(update, context):
     trading_active = False
     context.bot.send_message(chat_id=update.effective_chat.id, text="Trading has been stopped.")
 
-# Ajoutez les gestionnaires de commandes à votre bot
+# Ajoutez les gestionnaires de commandes à votre bot, y compris le nouveau /analyze_market
 dp.add_handler(CommandHandler('balance', get_balance_command))
 dp.add_handler(CommandHandler('trades', get_trades_command))
 dp.add_handler(CommandHandler('restart', restart_command))
@@ -279,8 +310,6 @@ dp.add_handler(CommandHandler('help', help_command))
 dp.add_handler(CommandHandler('status', status_command))
 dp.add_handler(CommandHandler('start_trading', start_trading_command))
 dp.add_handler(CommandHandler('stop_trading', stop_trading_command))
-
-# The new commands
 dp.add_handler(CommandHandler('set_risk_level', set_risk_level_command, pass_args=True))
 dp.add_handler(CommandHandler('get_profit', get_profit_command))
 dp.add_handler(CommandHandler('get_open_positions', get_open_positions_command))
@@ -289,6 +318,7 @@ dp.add_handler(CommandHandler('set_trade_amount', set_trade_amount_command, pass
 dp.add_handler(CommandHandler('get_market_conditions', get_market_conditions_command))
 dp.add_handler(CommandHandler('set_strategy', set_strategy_command, pass_args=True))
 dp.add_handler(CommandHandler('get_strategy', get_strategy_command))
+dp.add_handler(CommandHandler('analyze_market', analyze_market_command))
 
 def main():
     # Create a thread for automatic interaction with GPT-4
