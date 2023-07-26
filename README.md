@@ -2,7 +2,7 @@
 
 BybitGPT est un bot de trading automatique qui utilise l'IA ChatGPT pour prendre des décisions de trading en temps réel. Le bot est conçu pour prendre des décisions d'achat ou de vente de Bitcoin (BTC) en fonction des conditions actuelles du marché, telles que déterminées par le modèle ChatGPT de OpenAI.
 
-Le bot effectue automatiquement des transactions en fonction des réponses fournies par ChatGPT et envoie des notifications en temps réel sur Telegram pour vous tenir informé des actions prises.
+Le bot effectue automatiquement des transactions en fonction des réponses fournies par ChatGPT et envoie des notifications en temps réel sur Telegram pour vous tenir informé des actions prises. De plus, le bot offre une interface de commande sur Telegram pour interagir avec le bot et obtenir des informations sur le compte de trading.
 
 ## Configuration requise
 
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 4. Configurer les clés d'API et les paramètres du bot :
 
    - Ouvrez le fichier `BybitGPT.py` dans un éditeur de texte.
-   - Remplacez les valeurs `'your_api_key'`, `'your_secret_key'`, `'your_openai_api_key'`, `'your_bot_token'`, et `'your_chat_id'` par vos propres clés et paramètres. Enregistrez le fichier.
+   - Remplacez les valeurs `'YOUR_BYBIT_API_KEY'`, `'YOUR_BYBIT_SECRET'`, `'YOUR_OPENAI_API_KEY'`, `'YOUR_TELEGRAM_BOT_TOKEN'`, et `'YOUR_TELEGRAM_CHAT_ID'` par vos propres clés et paramètres. Enregistrez le fichier.
 
 ## Utilisation
 
@@ -47,6 +47,16 @@ python BybitGPT.py
 
 Le bot commencera à prendre des décisions de trading en fonction des réponses fournies par ChatGPT et effectuera des transactions automatiques en temps réel. Les notifications concernant les actions du bot seront envoyées sur le chat Telegram spécifié.
 
+## Commandes Telegram
+
+Le bot offre les commandes suivantes sur Telegram :
+
+- `/balance` - Obtenir votre balance actuelle.
+- `/trades` - Obtenir vos trades en cours.
+- `/restart` - Redémarrer le bot.
+- `/set_leverage` - Définir le levier (Exemple : `/set_leverage 10`).
+- `/help` - Obtenir la liste des commandes disponibles.
+
 ## Notes
 
 - Assurez-vous que votre bot de trading est configuré avec soin pour éviter tout comportement imprévu et des pertes financières.
@@ -55,8 +65,5 @@ Le bot commencera à prendre des décisions de trading en fonction des réponses
 
 Amusez-vous bien avec BybitGPT, votre bot de trading automatisé !
 
----
 
-N'hésitez pas à personnaliser davantage le contenu si nécessaire pour mieux refléter les spécificités de votre projet. Le fichier `README.md` est une ressource précieuse pour les utilisateurs, alors assurez-vous d'y inclure toutes les informations importantes pour les aider à installer, configurer et utiliser le bot en toute sécurité.
-
-Si vous avez des questions supplémentaires ou avez besoin de plus d'aide, n'hésitez pas à demander ! Bonne utilisation de BybitGPT et bon trading !
+N'oubliez pas de remplacer `'YOUR_BYBIT_API_KEY'`, `'YOUR_BYBIT_SECRET'`, `'YOUR_OPENAI_API_KEY'`, `'YOUR_TELEGRAM_BOT_TOKEN'` et `'YOUR_TELEGRAM_CHAT_ID'` par vos propres clés API et identifiants.
