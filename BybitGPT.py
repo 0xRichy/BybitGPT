@@ -105,8 +105,8 @@ def automatic_chat_with_chatgpt():
                 message = "Bot: No BTC balance to execute a SELL order."
                 log_and_notify(message)
         
-        # Attendre quelques secondes avant de demander une autre action à ChatGPT
-        time.sleep(10)
+        # Attendre 10 minutes avant de demander une autre action à ChatGPT
+        time.sleep(600)
 
 # Initialisez l'Updater avec votre token de bot
 updater = Updater(token=bot_token, use_context=True)
