@@ -4,12 +4,14 @@ import logging
 import requests
 import time
 import telegram
+import threading
+from telegram.ext import CommandHandler, Updater
 
 # Vous devez créer vos propres clés API sur Bybit et les remplacer ici
-apiKey = 'your_api_key'
-secret = 'your_secret_key'
+apiKey = 'YOUR_BYBIT_API_KEY'
+secret = 'YOUR_BYBIT_SECRET'
 
-openai.api_key = 'your_openai_api_key'
+openai.api_key = 'YOUR_OPENAI_API_KEY'
 
 exchange = ccxt.bybit({
     'apiKey': apiKey,
@@ -23,25 +25,41 @@ exchange = ccxt.bybit({
 # Set up logging
 logging.basicConfig(filename='bot.log', level=logging.INFO)
 
+# Initialise la connexion avec Telegram
+bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'
+bot = telegram.Bot(token=bot_token)
+
+# ID du chat sur lequel vous souhaitez recevoir les notifications
+chat_id = 'YOUR_TELEGRAM_CHAT_ID'
+
+def log_and_notify(message):
+    logging.info(message)
+    bot.send_message(chat_id=chat_id, text=message)
+
 def set_leverage(leverage: int):
-    print(f"Setting leverage to {leverage}")
-    # Add your code to set leverage here
+    message = f"Setting leverage to {leverage}"
+    log_and_notify(message)
 
 def get_balance():
-    print("Getting balance")
-    # Add your code to get balance here
+    message = "Getting balance"
+    log_and_notify(message)
     balance = 0
     return balance
 
 def get_price():
-    print("Getting price")
-    # Add your code to get price here
+    message = "Getting price"
+    log_and_notify(message)
     price = 0
     return price
 
 def place_order(side, amount):
-    print(f"Placing {side} order for {amount}")
-    # Add your code to place order here
+    # Remplacez cette ligne par votre code pour placer un ordre
+    # Vous devrez récupérer le prix d'entrée et le solde restant après le trade
+    entry_price = get_price()
+    remaining_balance = get_balance() - amount
+
+    message = f"Placed a {side} order for {amount} USDT at an entry price of {entry_price}. Remaining balance: {remaining_balance} USDT."
+    log_and_notify(message)
 
 def get_openai_decision(prompt):
     response = openai.Completion.create(
@@ -58,14 +76,8 @@ def get_openai_decision(prompt):
 
 # Nouvelle fonction pour l'interaction automatique avec ChatGPT et envoi de notifications Telegram
 def automatic_chat_with_chatgpt():
-    print("ChatGPT: Hello! I'm here to assist you with trading decisions.")
-    
-    # Initialise la connexion avec Telegram (remplacez 'your_bot_token' par le token de votre bot Telegram)
-    bot_token = 'your_bot_token'
-    bot = telegram.Bot(token=bot_token)
-    
-    # Remplacez 'your_chat_id' par l'ID du chat sur lequel vous souhaitez recevoir les notifications
-    chat_id = 'your_chat_id'
+    message = "ChatGPT: Hello! I'm here to assist you with trading decisions."
+    log_and_notify(message)
 
     while True:
         # Demande à ChatGPT quelle action prendre en fonction des conditions actuelles du marché
@@ -78,30 +90,90 @@ def automatic_chat_with_chatgpt():
                 set_leverage(25)  # Set leverage to 25x
                 place_order('BUY', 10)
                 message = "Bot: Placed a BUY order for 10 BTC."
-                print(message)
-                bot.send_message(chat_id=chat_id, text=message)
+                log_and_notify(message)
             else:
                 message = "Bot: Not enough USDT balance to execute a BUY order."
-                print(message)
-                bot.send_message(chat_id=chat_id, text=message)
+                log_and_notify(message)
         elif decision == 'sell':
             btc_balance = exchange.fetch_balance()['BTC']
             if btc_balance['free'] > 0:
                 set_leverage(25)  # Set leverage to 25x
                 place_order('SELL', btc_balance['free'])
                 message = f"Bot: Placed a SELL order for {btc_balance['free']} BTC."
-                print(message)
-                bot.send_message(chat_id=chat_id, text=message)
+                log_and_notify(message)
             else:
                 message = "Bot: No BTC balance to execute a SELL order."
-                print(message)
-                bot.send_message(chat_id=chat_id, text=message)
+                log_and_notify(message)
         
         # Attendre quelques secondes avant de demander une autre action à ChatGPT
         time.sleep(10)
 
-# Mettez en commentaire cette ligne pour éviter l'interaction manuelle
-#interact_with_chatgpt()
+# Initialisez l'Updater avec votre token de bot
+updater = Updater(token=bot_token, use_context=True)
 
-# Lancement de l'interaction automatique avec ChatGPT et envoi de notifications Telegram
-automatic_chat_with_chatgpt()
+# Obtenez le gestionnaire de mise à jour
+dp = updater.dispatcher
+
+# Fonction pour obtenir la balance du compte
+def get_balance_command(update, context):
+    # Remplacez cette ligne par votre code pour obtenir la balance du compte
+    balance = get_balance()
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Your balance is {balance} USDT")
+
+# Fonction pour obtenir les trades en cours
+def get_trades_command(update, context):
+    # Remplacez cette ligne par votre code pour obtenir les trades en cours
+    trades = "You have 2 trades open"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=trades)
+
+# Fonction pour la commande /restart
+def restart_command(update, context):
+    restart_text = "Bot needs to be restarted. Please restart the bot manually."
+    context.bot.send_message(chat_id=update.effective_chat.id, text=restart_text)
+
+# Fonction pour la commande /set_leverage
+def set_leverage_command(update, context):
+    # Vérifiez si l'utilisateur a fourni un argument pour le levier
+    if context.args:
+        try:
+            leverage = int(context.args[0])
+            set_leverage(leverage)
+            context.bot.send_message(chat_id=update.effective_chat.id, text=f"Leverage set to {leverage}.")
+        except ValueError:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Invalid leverage. Please provide a number.")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No leverage provided. Please provide a number after the command. Example: /set_leverage 10")
+
+# Fonction pour la commande /help
+def help_command(update, context):
+    help_text = """
+Here are the available commands:
+
+/balance - Get your current balance
+/trades - Get your current trades
+/restart - Restart the bot
+/set_leverage - Set the leverage (Example: /set_leverage 10)
+    """
+    context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
+
+# Ajoutez les gestionnaires de commandes à votre bot
+dp.add_handler(CommandHandler('balance', get_balance_command))
+dp.add_handler(CommandHandler('trades', get_trades_command))
+dp.add_handler(CommandHandler('restart', restart_command))
+dp.add_handler(CommandHandler('set_leverage', set_leverage_command, pass_args=True))
+dp.add_handler(CommandHandler('help', help_command))
+
+def main():
+    # Créez un thread pour l'interaction automatique avec ChatGPT
+    chat_thread = threading.Thread(target=automatic_chat_with_chatgpt)
+
+    # Créez un thread pour le bot Telegram
+    telegram_thread = threading.Thread(target=updater.start_polling)
+
+    # Démarrez les threads
+    chat_thread.start()
+    telegram_thread.start()
+
+# Appelez la fonction main pour démarrer les threads
+if __name__ == "__main__":
+    main()
