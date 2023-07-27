@@ -6,6 +6,8 @@ import telegram
 import threading
 from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 import subprocess
+import pandas as pd
+import ta
 
 # Replace the placeholders with your actual API keys and tokens
 openai.api_key = 'YOUR_OPENAI_API_KEY'
@@ -43,7 +45,24 @@ def set_leverage(leverage: int):
         error_message = f"Failed to set leverage: {str(e)}"
         log_and_notify(error_message)
 
+# Add the new function to calculate the indicators
+def calculate_indicators():
+    # Fetch the recent historical data
+    data = exchange.fetch_ohlcv('BTC/USDT', '1h', limit=500)
+    df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
 
+    # Calculate the indicators
+    df['RSI'] = ta.momentum.rsi(df['close'])
+    df['MACD'] = ta.trend.macd_diff(df['close'])
+    df['Stochastic RSI'] = ta.momentum.stochrsi(df['close'])
+
+    # Get the latest values
+    latest_rsi = df['RSI'].iloc[-1]
+    latest_macd = df['MACD'].iloc[-1]
+    latest_stoch_rsi = df['Stochastic RSI'].iloc[-1]
+
+    return latest_rsi, latest_macd, latest_stoch_rsi
 
 def get_balance():
     message = "Getting balance"
